@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        button {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <p id="Manish"></p>
+
+    <button onclick="conductdata('names')">All Names</button><br>
+    <button onclick="conductdata('health')">Health Issues</button>
+    <input type="number" id="healthIssueNumber" placeholder="Enter health issue number"><br>
+    <input type="radio" id="imperial" name="weight" value="imperial" checked>
+    <label for="imperial">Imperial</label>
+    <input type="radio" id="metric" name="weight" value="metric">
+    <label for="metric">Metric</label>
+    <button onclick="conductdata('weight')">Weight</button><br>
+    <button onclick="conductdata('intelligence')">Intelligence – Friendly</button><br>
+    <button onclick="conductdata('averageIntelligence')">Average Intelligence</button><br>
+    <button onclick="conductdata('averageIntelligenceChildFriendly')">Average Intelligence for Child Friendly = 4</button>
+    
+    <div id="displayContent"></div>
+
+    <script>
+        function conductdata(type){
+            displayContent = document.getElementById("displayContent")
+            displayContent.innerHTML = ""; // Clear the content
+
+            var siteUrl="https://api.thecatapi.com/v1/breeds";
+            
+            fetch(siteUrl).then(response => {
+                if (!response.ok) {
+                    throw new Error('Something went wrong.');
+                }
+                return response.json();
+            })
+            .then(Jsondata => { 
+                let x = 0;
+                let totalIntelligence = 0;
+                let totalIntelligenceChildFriendly = 0;
+                let healthIssueNumber = document.getElementById("healthIssueNumber").value;
+                let weightType = document.querySelector('input[name="weight"]:checked').value;
+                
+                if (type === 'names') {
+                    displayContent.appendChild(document.createTextNode(type.charAt(0).toUpperCase() + type.slice(1)));
+                    displayContent.appendChild(document.createElement('br'));
+                    displayContent.appendChild(document.createTextNode("----------"));
+                    displayContent.appendChild(document.createElement('br'));
+                } else if (type === 'health') {
+                    displayContent.appendChild(document.createTextNode("Health Issues for " + healthIssueNumber));
+                    displayContent.appendChild(document.createElement('br'));
+                    displayContent.appendChild(document.createTextNode("----------"));
+                    displayContent.appendChild(document.createElement('br'));
+                } else if (type === 'weight') {
+                    displayContent.appendChild(document.createTextNode("Weight in " + weightType.charAt(0).toUpperCase() + weightType.slice(1)));
+                    displayContent.appendChild(document.createElement('br'));
+                    displayContent.appendChild(document.createTextNode("----------"));
+                    displayContent.appendChild(document.createElement('br'));
+                } else if (type === 'intelligence') {
+                    displayContent.appendChild(document.createTextNode("I - F"));
+                    displayContent.appendChild(document.createElement('br'));
+                    displayContent.appendChild(document.createTextNode("----------"));
+                    displayContent.appendChild(document.createElement('br'));
+                }
+                
+                Object.values(Jsondata).forEach(arrayvalue => {
+                    if (type === 'names' || (type === 'health' && arrayvalue.health_issues == healthIssueNumber)) {
+                        x++;
+                        displayContent.appendChild(document.createTextNode(arrayvalue.name));
+                        displayContent.appendChild(document.createElement('br'));
+                    } else if (type === 'weight') {
+                        x++;
+                        let weight = weightType === 'imperial' ? arrayvalue.weight.imperial : arrayvalue.weight.metric;
+                        displayContent.appendChild(document.createTextNode(weight));
+                        displayContent.appendChild(document.createElement('br'));
+                    } else if (type === 'intelligence') {
+                        x++;
+                        let intelligence = arrayvalue.intelligence;
+                        let childFriendly = arrayvalue.child_friendly;
+                        displayContent.appendChild(document.createTextNode(intelligence + " , " + childFriendly));
+                        displayContent.appendChild(document.createElement('br'));
+                    } else if (type === 'averageIntelligence') {
+                        x++;
+                        totalIntelligence += arrayvalue.intelligence;
+                    } else if (type === 'averageIntelligenceChildFriendly' && arrayvalue.child_friendly >= 4) {
+                        x++;
+                        totalIntelligenceChildFriendly += arrayvalue.intelligence;
+                    }
+                });
+                if (type === 'averageIntelligence') {
+                    let averageIntelligence = totalIntelligence / x;
+                    displayContent.appendChild(document.createTextNode("Average Intelligence: " + averageIntelligence.toFixed(2)));
+                    displayContent.appendChild(document.createElement('br'));
+                } else if (type === 'averageIntelligenceChildFriendly') {
+                    let averageIntelligenceChildFriendly = totalIntelligenceChildFriendly / x;
+                    displayContent.appendChild(document.createTextNode("Average Intelligence for Child Friendly: " + averageIntelligenceChildFriendly.toFixed(2)));
+                    displayContent.appendChild(document.createElement('br'));
+                }
+                if (type === 'names') {
+                    displayContent.insertBefore(document.createTextNode(type.charAt(0).toUpperCase() + type.slice(1) + " (total=" + x + ")"), displayContent.firstChild);
+                    displayContent.insertBefore(document.createElement('br'), displayContent.childNodes[1]);
+                    displayContent.insertBefore(document.createTextNode("----------"), displayContent.childNodes[2]);
+                    displayContent.insertBefore(document.createElement('br'), displayContent.childNodes[3]);
+                } else if (type === 'health') {
+                    displayContent.appendChild(document.createTextNode("----------"));
+                    displayContent.appendChild(document.createElement('br'));
+                    displayContent.appendChild(document.createTextNode("Total = " + x));
+                    displayContent.appendChild(document.createElement('br'));
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching JSON:', error);
+            });
+        }
+    </script>
+</body>
+</html>
